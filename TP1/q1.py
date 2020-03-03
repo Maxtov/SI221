@@ -1,0 +1,166 @@
+import numpy as np
+import matplotlib.mlab as mlab
+import matplotlib.pyplot as plt
+import random, math
+from sklearn.datasets import make_blobs
+
+def generate_data(sigma):
+	X,y = make_blobs(n_samples=200, centers=[[-1,0],[1,0]], n_features=2, cluster_std=sigma)
+	return X,y
+
+def add_bias(X):
+	newX = []
+	for x in X:
+		newX.append((x[0],x[1],1))
+	X=np.array(newX)
+	return X
+
+def predict(x, w):
+	if(np.dot(w,x) > 0):
+		return 1
+	else:
+		return 0
+
+def train(data, y,eta, T,w):
+	for i in range(T):
+		sum_error = 0.0
+		for i in range(len(data)):
+			prediction = predict(data[i], w)
+			if(prediction != y[i]):
+				if(prediction):
+					w = w - eta * data[i]
+				else:
+					w = w + eta * data[i]
+	return w
+
+def do_N_perceptron(N,eta,T):
+	sigmas = [0.05,0.25,0.5,0.75]
+	w = np.zeros(3)
+	erreurs = np.zeros((4,T))
+	ei=np.zeros((4,2))
+	for sigma in range(len(sigmas)):
+		for n in range(N):
+			X_no_bias,y = generate_data(sigmas[sigma])
+			X = add_bias(X_no_bias)
+			w = train(X,y,eta,T,w)
+			erreurs[sigma][n] = calcul_erreur(X,y,w)
+		ei[sigma] = [np.array(erreurs[sigma]).mean(),np.array(erreurs[sigma]).std()]
+	return w, ei
+
+def calcul_erreur(data,y,w):
+	err = 0
+	for i in range(len(data)):
+		if(predict(data[i],w)!=y[i]):
+			err += 1
+	return err/len(data)
+
+
+txt = input("valeur de sigma = ")
+sigma = float(txt)
+
+#plt.show(a)
+T = 200
+w, err = do_N_perceptron(50,0.1,T)
+print(w)
+print("taux d'erreurs et deviation : ",err)
+
+
+X,y = make_blobs(n_samples=200, centers=[[-1,0],[1,0]], n_features=2, cluster_std=sigma)
+plt.scatter(X[:,0],X[:,1],c=y)
+abs = np.arange(-1,1,0.01)
+f = -(w[0]/w[1]) * abs - (w[2]/w[1])
+plt.xlim((-2,2))
+plt.ylim((-2,2))
+plt.plot(abs,f)
+plt.show()
+
+
+
+
+
+'''
+for it in range(0,1):
+	X=[]
+	y=[]
+	for i in range(0,200):
+		#rd = random.randint(0,1)
+		if(i<100):
+			rd=0
+			mu = (-1,0)
+		else:
+			rd=1
+			mu = (1,0)
+		X.append(np.random.multivariate_normal(mu,var))
+		y.append(rd)
+
+	for i in range(0,200):
+		if(y[i]==0):
+			if( y[i]*np.dot(w,X[i]) <= 0):
+				print("<=")
+				loss[it] += 1
+				w = w + y[i]*X[i]
+		elif(y[i]==1):
+			if( y[i]*np.dot(w,X[i]) > 0):
+				print(">")
+				loss[it] += 1
+				w = w - y[i]*X[i]
+
+
+print(sum(loss))
+print(w)
+
+
+
+
+ 
+# Estimate Perceptron weights using stochastic gradient descent
+def train_weights(train, l_rate, n_epoch):
+	weights = [0.0 for i in range(len(train[0]))]
+	for epoch in range(n_epoch):
+		sum_error = 0.0
+		for row in train:
+			prediction = predict(row, weights)
+			error = row[-1] - prediction
+			sum_error += error**2
+			weights[0] = weights[0] + l_rate * error
+			for i in range(len(row)-1):
+				weights[i + 1] = weights[i + 1] + l_rate * error * row[i]
+	return weights
+ 
+# Calculate weights
+dataset = [[2.7810836,2.550537003,0],
+	[1.465489372,2.362125076,0],
+	[3.396561688,4.400293529,0],
+	[1.38807019,1.850220317,0],
+	[3.06407232,3.005305973,0],
+	[7.627531214,2.759262235,1],
+	[5.332441248,2.088626775,1],
+	[6.922596716,1.77106367,1],
+	[8.675418651,-0.242068655,1],
+	[7.673756466,3.508563011,1]]
+
+I = np.array([[1, 0], [0, 1]])
+sigma = 0.95
+var = sigma**2 * I
+dataset = []
+y=[]
+for i in range(0,200):
+		#rd = random.randint(0,1)
+		if(i<=100):
+			rd=0
+			mu = (-1,0)
+		else:
+			rd=1
+			mu = (1,0)
+		x = np.random.multivariate_normal(mu,var)
+		x = (x[0],x[1],rd)
+		dataset.append(x)
+
+
+l_rate = 0.1
+
+n_epoch = 150
+
+weights = train_weights(dataset, l_rate, n_epoch)
+print(weights)
+'''
