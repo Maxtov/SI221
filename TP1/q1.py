@@ -33,19 +33,20 @@ def train(data, y,eta, T,w):
 					w = w + eta * data[i]
 	return w
 
-def do_N_perceptron(N,eta,T):
-	sigmas = [0.05,0.25,0.5,0.75]
-	w = np.zeros(3)
+def do_N_perceptron(N,eta,T,sigmas):
 	erreurs = np.zeros((4,T))
-	ei=np.zeros((4,2))
+	e=np.zeros(4)
+	s = np.zeros(4)
 	for sigma in range(len(sigmas)):
+		w = np.zeros(3)
 		for n in range(N):
 			X_no_bias,y = generate_data(sigmas[sigma])
 			X = add_bias(X_no_bias)
 			w = train(X,y,eta,T,w)
 			erreurs[sigma][n] = calcul_erreur(X,y,w)
-		ei[sigma] = [np.array(erreurs[sigma]).mean(),np.array(erreurs[sigma]).std()]
-	return w, ei
+		e[sigma] = np.array(erreurs[sigma]).mean()
+		s[sigma] = calcul_deviation(erreurs[sigma],e[sigma],N)
+	return w, e,s
 
 def calcul_erreur(data,y,w):
 	err = 0
@@ -54,17 +55,34 @@ def calcul_erreur(data,y,w):
 			err += 1
 	return err/len(data)
 
+def calcul_deviation(erreurs,e,N):
+	sum=0
+	for i in range(N):
+		sum += (erreurs[i]-e)**2
+	s = np.sqrt(sum/50)
+	return s
 
-txt = input("valeur de sigma = ")
-sigma = float(txt)
 
 #plt.show(a)
 T = 200
-w, err = do_N_perceptron(50,0.1,T)
+sigmas = [0.05,0.25,0.5,0.75]
+w, err, s = do_N_perceptron(50,0.1,T,sigmas)
 print(w)
 print("taux d'erreurs et deviation : ",err)
+print("deviation : ",s)
+
+r = range(len(err))
+plt.title("Erreur et Deviation en fonction de sigma")
+plt.bar(r, err, width = 0.4, color = 'yellow',
+           edgecolor = 'black', linewidth = 1, label='erreur')
+plt.bar([x + 0.4 for x in r], s, width = 0.4, color = 'pink',
+           edgecolor = 'black', linewidth = 1, label='deviation')
+plt.legend()
+plt.xticks([r1 + 0.4 / 2 for r1 in r], ['0.05', '0.25', '0.5', '0.75'])
+plt.show()
 
 
+'''
 X,y = make_blobs(n_samples=200, centers=[[-1,0],[1,0]], n_features=2, cluster_std=sigma)
 plt.scatter(X[:,0],X[:,1],c=y)
 abs = np.arange(-1,1,0.01)
@@ -73,7 +91,7 @@ plt.xlim((-2,2))
 plt.ylim((-2,2))
 plt.plot(abs,f)
 plt.show()
-
+'''
 
 
 
