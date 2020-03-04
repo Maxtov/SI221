@@ -42,7 +42,7 @@ def do_N_perceptron(N,eta,T,sigmas):
 		for n in range(N):
 			X,y = generate_data(sigmas[sigma])
 			#X = add_bias(X_no_bias)
-			w = train(X,y,eta,T,w)
+			w,ep = train(X,y,eta,T,w,0)
 			erreurs[sigma][n] = calcul_erreur(X,y,w)
 		e[sigma] = np.array(erreurs[sigma]).mean()
 		s[sigma] = calcul_deviation(erreurs[sigma],e[sigma],N)
@@ -126,9 +126,9 @@ def evaluate_pixels(image,value):
 	for row in range(nb_rows):
 		for col in range(nb_cols):
 			if(image[0][row][col] < value):
-				labels[row][col] = 0
-			else:
 				labels[row][col] = 1
+			else:
+				labels[row][col] = 2
 	return labels
 
 def add_bias_image(image):
@@ -141,39 +141,125 @@ def add_bias_image(image):
 	img=np.array(newImg)
 	return img
 
-def error_correction(image, labels, eta, weights):
-	erreurs = []
+def predict_im(x, w):
+	if(np.dot(w,x) > 0):
+		return 1
+	else:
+		return 2
+
+def calcul_error_im(image,labels,w):
+	error=0
 	for row in range(len(image)):
-		weights = train(image[row],labels[row],eta,1,weights)
-		erreurs.append(calcul_erreur(image[row],labels[row],weights))
-	erreur = np.sum(erreurs)
-	return weights,erreur
+		for col in range(len(image[1])):
+			prediction = predict_im((image[row][col],1),w)
+			if(prediction != labels[row][col]):
+				error += 1
+	return error
 
+def train_image(image,labels,eta,w):
+	nb_rows = len(image[0])
+	nb_cols = len(image[1])
+	for row in range(nb_rows):
+		for col in range(nb_cols):
+			prediction = predict_im((image[row][col],1),w)
+			if(prediction != labels[row][col]):
+				if(prediction==1):
+					w = w - eta * np.array([image[row][col],1])
+				else:
+					w = w + eta * np.array([image[row][col],1])
+	return w
 
+def error_correction(image, labels, eta, weights):
+	erreur=-1
+	epoch=0
+	while(erreur!=0):
+		erreurs = []
+		weights = train_image(image,labels,eta,weights)
+		erreurs.append(calcul_error_im(image,labels,weights))
+		erreur = np.sum(erreurs)
+		epoch += 1
+		print("epoch : ",epoch)
+		print("weight :",weights)
+		print("erreur : ",erreur)
+	return weights,erreur,epoch
 
-#img[0] contient les pixels
-img=tiilab.imz2mat("data/landsattarasconC4.ima")
-lab = evaluate_pixels(img,30)
+def error_correction2(image,y,eta,w):
+    n=len(image)
+    m=len(image[1])
+    former_w=w
+    epoch=0
+    for i in range(n):
+        for j in range(m):
+            if predict_im(np.array([image[i][j],1]),w)!=y[i][j]:   #if the prediction is wrong, we change w 
+                if predict_im(np.array([image[i][j],1]),w)==1:
+                     w=w-np.array([image[i][j],1])
+                else:
+                    w=w+np.array([image[i][j],1])
+    while (w[0]!=former_w[0] or w[1]!=former_w[1]):
+        epoch+=1
+        print("Epoch number",epoch)
+        print("w=",w)
+        former_w=w
+        for i in range(n):
+            for j in range(m):
+                if predict_im(np.array([image[i][j],1]),w)!=y[i][j]:   #if the prediction is wrong, we change w 
+                    if predict_im(np.array([image[i][j],1]),w)==1:
+                        w=w-eta*np.array([image[i][j],1])
+                    else:
+                        w=w+eta*np.array([image[i][j],1])
+            
+    return w,1,epoch
 
-dataset = add_bias_image(img[0])
+def question2_1():
+	#img[0] contient les pixels
+	img=tiilab.imz2mat("data/landsattarasconC4.ima")
+	lab = evaluate_pixels(img,30)
+	eta = 0.01
+	w = np.random.rand(2)
 
-print(dataset[:][0][:,0])
+	w,err,ep = error_correction(img[0],lab,eta,w)
 
-plt.scatter(lab[0],dataset[:][0][:,0])
-plt.show()
+def evaluate_pixels_2(image):
+	nb_rows = len(image[0])
+	nb_cols = len(image[0][0])
+	labels=np.zeros((nb_rows,nb_cols))
+	for row in range(nb_rows):
+		for col in range(nb_cols):
+			if(image[0][row][col] == 110):
+				labels[row][col] = 1
+			else:
+				labels[row][col] = 2
+	return labels
 
-err=-1
-eta = 1
-w = np.zeros(2)
+def questioon2_2():
+	img=tiilab.imz2mat("data/landsattarasconC4.ima")
+	lab = evaluate_pixels_2(img)
+	print("Nombre de pixels de valeur 110 = ",np.sum(lab==1))
+	eta = 0.1
+	w = np.random.rand(2)
+	w,err,ep = error_correction(img[0],lab,eta,w)
 
-epochs = 0
-while err != 0:
-	w,err = error_correction(dataset,lab,eta,w)
-	epochs += 1
-	print(err)
+def evaluate_pixels_3(image):
+	nb_rows = len(image[0])
+	nb_cols = len(image[0][0])
+	labels=np.zeros((nb_rows,nb_cols))
+	for row in range(nb_rows):
+		for col in range(nb_cols):
+			if(image[0][row][col] > 140):
+				labels[row][col] = 1
+			else:
+				labels[row][col] = 2
+	return labels
 
-print(w)
-print(epochs)
+def questioon2_3():
+	img=tiilab.imz2mat("data/landsattarasconC4.ima")
+	lab = evaluate_pixels_3(img)
+	print("Nombre de pixels de valeur 110 = ",np.sum(lab==1))
+	eta = 0.1
+	w = np.random.rand(2)
+	w,err,ep = error_correction(img[0],lab,eta,w)
+
+questioon2_3()
 
 '''
 plt.imshow(lab)
