@@ -42,7 +42,7 @@ def do_N_perceptron(N,eta,T,sigmas):
 		for n in range(N):
 			X,y = generate_data(sigmas[sigma])
 			#X = add_bias(X_no_bias)
-			w,ep = train(X,y,eta,T,w,0)
+			w = train(X,y,eta,T,w)
 			erreurs[sigma][n] = calcul_erreur(X,y,w)
 		e[sigma] = np.array(erreurs[sigma]).mean()
 		s[sigma] = calcul_deviation(erreurs[sigma],e[sigma],N)
@@ -119,13 +119,13 @@ def question1_2():
 	plt.xticks([r1 + 0.4 / 2 for r1 in r], ['0%', '5%', '10%', '20%'])
 	plt.show()
 
-def evaluate_pixels(image,value):
+def evaluate_pixels1(image):
 	nb_rows = len(image[0])
 	nb_cols = len(image[0][0])
 	labels=np.zeros((nb_rows,nb_cols))
 	for row in range(nb_rows):
 		for col in range(nb_cols):
-			if(image[0][row][col] < value):
+			if(image[0][row][col] < 30):
 				labels[row][col] = 1
 			else:
 				labels[row][col] = 2
@@ -213,11 +213,16 @@ def error_correction2(image,y,eta,w):
 def question2_1():
 	#img[0] contient les pixels
 	img=tiilab.imz2mat("data/landsattarasconC4.ima")
-	lab = evaluate_pixels(img,30)
+	lab = evaluate_pixels1(img)
+	print("Nombre de pixels de valeur < 30 = ",np.sum(lab==1))
 	eta = 0.01
 	w = np.random.rand(2)
 
 	w,err,ep = error_correction(img[0],lab,eta,w)
+
+	plt.imshow(lab)
+	plt.show(block = False)
+	
 
 def evaluate_pixels_2(image):
 	nb_rows = len(image[0])
@@ -231,13 +236,17 @@ def evaluate_pixels_2(image):
 				labels[row][col] = 2
 	return labels
 
-def questioon2_2():
+def question2_2():
 	img=tiilab.imz2mat("data/landsattarasconC4.ima")
 	lab = evaluate_pixels_2(img)
-	print("Nombre de pixels de valeur 110 = ",np.sum(lab==1))
+
+	plt.imshow(lab)
+	plt.show(block = True)
+	print("Nombre de pixels de valeur égale à 110 = ",np.sum(lab==1))
 	eta = 0.1
 	w = np.random.rand(2)
 	w,err,ep = error_correction(img[0],lab,eta,w)
+
 
 def evaluate_pixels_3(image):
 	nb_rows = len(image[0])
@@ -251,21 +260,22 @@ def evaluate_pixels_3(image):
 				labels[row][col] = 2
 	return labels
 
-def questioon2_3():
+def question2_3():
 	img=tiilab.imz2mat("data/landsattarasconC4.ima")
 	lab = evaluate_pixels_3(img)
-	print("Nombre de pixels de valeur 110 = ",np.sum(lab==1))
-	eta = 0.1
+	print("Nombre de pixels de valeur > 140 = ",np.sum(lab==1))
+	eta = 0.01
 	w = np.random.rand(2)
 	w,err,ep = error_correction(img[0],lab,eta,w)
 
-questioon2_3()
+	plt.imshow(lab)
+	plt.show(block = True)
 
-'''
-plt.imshow(lab)
-plt.show(block = False)
-tiilab.visusar(img[0])
-'''
+question2_3()
+
+
+
+
 
 ''' Afficher un set de donnée et la droite à partir de w
 X,y = make_blobs(n_samples=200, centers=[[-1,0],[1,0]], n_features=2, cluster_std=sigma)
